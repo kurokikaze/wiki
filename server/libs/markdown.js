@@ -299,13 +299,37 @@ const parseContent = (content) => {
     cr(elm).removeClass('align-center')
   })
 
-  // Mathjax Post-processor
+  return processLinks(cr).then(cr => {
+    return cr.html();
+  })
+}
 
-  if (appconfig.features.mathjax) {
-    return processMathjax(cr.html())
-  } else {
-    return Promise.resolve(cr.html())
-  }
+const processLinks = (cr) => {
+  //let cr = cheerio.load(html)
+  let linkStack = [];
+
+  // Add "missing" class to links leading to missing pages
+  cr('a.internal-link').each((i, elm) => {
+    const link = cr(elm).attr('href');
+
+    if (link && link[0] !== '#') {
+      let linkPromise = entries.exists(link).then((result) => {
+        if (!result) {
+          cr(elm).addClass('missing');
+        }
+        return true;
+      }, noResult => {
+        return false;
+      });
+
+      linkStack.push(linkPromise);      
+    }
+  });
+
+  // Mathjax Post-processor
+  return Promise.all(linkStack).then(results => {
+    return cr;
+  })
 }
 
 /**
@@ -400,13 +424,15 @@ module.exports = {
    * @return     {Object}  Object containing meta, html and tree data
    */
   parse(content) {
-    return parseContent(content).then(html => {
-      return {
-        meta: parseMeta(content),
-        html,
-        tree: parseTree(content)
-      }
-    })
+    return parseContent(content).then(tree => {
+      return processLinks(tree).then(html=> {
+        return {
+          meta: parseMeta(content),
+          html,
+          tree: parseTree(content)
+        }
+      })
+    });
   },
 
   parseContent,
