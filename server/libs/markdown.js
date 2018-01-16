@@ -94,7 +94,7 @@ const videoRules = [
 
 // Regex
 
-const textRegex = new RegExp('\\b[a-z0-9-.,' + appdata.regex.cjk + appdata.regex.arabic + ']+\\b', 'g')
+const textRegex = new RegExp('\\b[a-z0-9-.,' + appdata.regex.russian + appdata.regex.cjk + appdata.regex.arabic + ']+\\b', 'g')
 const mathRegex = [
   {
     format: 'TeX',
